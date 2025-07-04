@@ -1,11 +1,18 @@
-FROM python3.10-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
+# Copy requirements first for better caching
+COPY requirements.txt .
 
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-RUN pip install -r requirements.txt
+# Expose port
+EXPOSE 5000
 
-
-CMD [ "python",app.py ]
+# Run the application
+CMD ["python", "app.py"]

@@ -2,28 +2,17 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE = "my-flask-app:${env.BUILD_NUMBER}"
-        DOCKER_REGISTRY = "docker.io" // Optional: Use Docker Hub or another registry
-        REGISTRY_CREDENTIALS = 'dockerhub-credentials' // Optional: Jenkins credential ID for Docker Hub
     }
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/Prajwal299/Practise-app.git'
+                git branch: 'main', credentialsId: 'Prajwal299', url: 'https://github.com/Prajwal299/Practise-App.git'
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
                     dockerImage = docker.build(DOCKER_IMAGE)
-                }
-            }
-        }
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('', REGISTRY_CREDENTIALS) {
-                        dockerImage.push()
-                    }
                 }
             }
         }
@@ -38,7 +27,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    dockerImage.run('-p 5000:5000 --name my-flask-app')
+                    dockerImage.run('-p 5000:5000 --name my-flask-app -d')
                 }
             }
         }

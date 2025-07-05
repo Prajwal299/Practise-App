@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'Prajwal299', url: 'https://github.com/Prajwal299/Practise-App.git'
+                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/Prajwal299/Practise-App.git'
             }
         }
         stage('Build Docker Image') {

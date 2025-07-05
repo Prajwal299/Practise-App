@@ -1,30 +1,57 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage("installation"){
-            steps{git branch: 'main', url: 'https://github.com/Prajwal299/Practise-App.git'}
+    environment {
+        DOCKER_IMAGE = "my-flask-app:${env.BUILD_NUMBER}"
+        DOCKER_REGISTRY = "docker.io" // Optional: Use Docker Hub or another registry
+        REGISTRY_CREDENTIALS = 'dockerhub-credentials' // Optional: Jenkins credential ID for Docker Hub
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/Prajwal299/Practise-app.git'
+            }
         }
-        stage("Docker-built image") {
-       steps {
-        bat '''
-            docker build -t flask-app-11 '''
-    }
-}
-stage("run contasiner") {
-    steps {
-        bat '''
-           docker run -d -p 5000:5000 flask-app-11
-        '''
-    }
-}
-
-    }
-    post{
-        success{
-            echo "successfull"
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build(DOCKER_IMAGE)
+                }
+            }
         }
-        failure{
-            echo "Failed"
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('', REGISTRY_CREDENTIALS) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Stop Previous Containers') {
+            steps {
+                sh '''
+                docker ps -q -f name=my-flask-app | xargs --no-run-if-empty docker stop
+                docker ps -a -q -f name=my-flask-app | xargs --no-run-if-empty docker rm
+                '''
+            }
+        }
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    dockerImage.run('-p 5000:5000 --name my-flask-app')
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+        success {
+            echo 'Flask app deployed successfully on port 5000.'
+        }
+        failure {
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
